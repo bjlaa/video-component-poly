@@ -6,10 +6,10 @@ class App extends Component {
 		return(
 			<div className='app'>
 				<div className='title'>Test Video Component</div>
-				
+
 			</div>
 		)
 	}
 }
 
-ReactDOM.render(<App />, document.querySelector('main'));
+ReactDOM.render(<App />, document.querySelector('#main'));
