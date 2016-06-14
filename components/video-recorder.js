@@ -3,7 +3,7 @@ import React from 'react';
 var VideoRecorder = React.createClass({
 	renderVideo() {
 		this.refs.video.style.visibility = 'visible';
-		this.refs.button.style.display = 'none';
+		this.refs.record.style.display = 'none';
 		this.captureVideoAudio();
 	},
 
@@ -11,9 +11,9 @@ var VideoRecorder = React.createClass({
 		var renderedComponent;
 		return(
 			<div>
-				<div className='record'>
+				<div ref='record' className='record'>
 					<div className='record-message'>Let's try recording a video:</div>
-					<div ref='button' className='record-button-container'>
+					<div className='record-button-container'>
 						<i onClick={this.renderVideo} className="fa fa-video-camera" aria-hidden="true"></i>
 						<i className="fa fa-arrow-up" aria-hidden="true"></i>
 						<div className='record-click-me' >Click me!</div>
@@ -21,6 +21,22 @@ var VideoRecorder = React.createClass({
 				</div>					
 				<div ref='video' id='video-container'>
 					<video id='camera-stream' width='500' autoPlay ></video>
+					<div>
+			      <label className='labels-upload' htmlFor="title-upload">Title:</label>
+			      <input id="title-upload" type="text" defaultValue=''/>
+			    </div>
+			    <div>
+			      <label className='labels-upload' htmlFor="description">Description:</label>
+			      <textarea defaultValue='' id="description"></textarea>
+			    </div>
+			    <div>
+			      <label className='labels-upload' htmlFor="privacy-status">Privacy Status:</label>
+			      <select id="privacy-status">
+			        <option>public</option>
+			        <option>unlisted</option>
+			        <option>private</option>
+			      </select>
+			    </div>					
 				</div>				
 			</div>
 			
