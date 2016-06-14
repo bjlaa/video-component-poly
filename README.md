@@ -4,6 +4,10 @@ An test-app that captures, saves (building phase) and uploads (building phase) a
 
 ## Getting started:
 
+Visit [this online version](http://bjlaa.github.io/video-component-poly/)
+
+or
+
 Download/clone the repo, then in your command line move to the repository and type in:
 
 ```
