@@ -32,9 +32,6 @@ a {
   	color: white;
   }
   &:hover {
-  	@media (min-width:768px){
-
-  	}
   	text-decoration: none;
   }
 }
@@ -53,15 +50,65 @@ a {
 	font-size: 28pt;
 	width: 100%;
 	text-align: center;
-	padding-top: 100px;
+	padding-top: 50px;
 	color: gray;
 }
 
 /*
 	VideoRecorder component
 */
+.record {
+	width: 100%;
+}
+.record-message {
+	font-family: Helvetica, Arial;
+	font-size: 18pt;	
+	width: 100%;
+	text-align: center;	
+	padding-top: 50px;
+}
+.record-button-container {
+	margin-top: 100px;
+	width: 100%;
+	text-align: center;
+}
+
+i.fa.fa-video-camera {
+	display: block;
+	margin-right: auto;
+	margin-left: auto;
+	margin-top: 30px;
+	width: 40px;
+	font-size: 30pt;
+	padding: 10px;
+	border: solid gray 1pt;
+	border-radius: 10px;
+	color: #AD0000;
+}
+i.fa.fa-video-camera:hover {
+	cursor: pointer;
+	background: #D2BCBC;
+	transition: background .5s ease-in-out;
+}
+
+i.fa.fa-arrow-up {
+	font-size:8pt;
+	display: block;
+	margin-right: auto;
+	margin-left: auto;	
+	width: 10px;
+	margin-top: 5px;
+}
+
+.record-click-me {
+	font-family: "Comic Sans MS", cursive, sans-serif;
+	font-size: 10pt;	
+	width: 100%;
+	text-align: center;
+}
 
 #video-container {
+	visibility: hidden;
   margin: 2em auto 0;
   width: 500px;
   padding: 2em;
