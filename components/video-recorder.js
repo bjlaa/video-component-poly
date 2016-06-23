@@ -1,7 +1,40 @@
 import React from 'react';
 
 var VideoRecorder = React.createClass({
-	renderVideo() {
+	componentDidMount: function() {
+
+	},
+
+	authorizeApp: function() {
+		var clientId = '463787160210-89kiojjsupa9u2g2s946g7em5d8t6kdj.apps.googleusercontent.com';
+		var apiKey = 'KzeIoIGf-kY0qKMqAOKZOenP';
+		var scopes = [
+		'https://www.googleapis.com/auth/youtube'
+		];
+		function handleClientLoad() {
+		  gapi.client.setApiKey(apiKey);
+		  window.setTimeout(checkAuth,1);
+		}
+
+		function checkAuth() {
+		  gapi.auth.authorize({client_id: clientId, scope: scopes, immediate: true}, handleAuthResult);
+		}
+
+		function handleAuthResult(authResult) {
+		  if (authResult && !authResult.error) {
+		    console.log('Connected to gapi!!');
+		  } else {
+		    handleAuthClick;
+		  }
+		}
+
+		function handleAuthClick(event) {
+		  gapi.auth.authorize({client_id: clientId, scope: scopes, immediate: false}, handleAuthResult);
+		  return false;
+		}
+	},
+
+	renderVideo: function() {
 		this.refs.video.style.visibility = 'visible';
 		this.refs.record.style.display = 'none';
 		this.captureVideoAudio();

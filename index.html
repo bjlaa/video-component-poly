@@ -5,9 +5,54 @@
 		<meta charset='UTF-8'>
 		<link rel="stylesheet" href="css/styles.css">
 		<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.6.3/css/font-awesome.min.css">
+		
 	</head>
+	
 	<body>
+		<script>
+			var clientId = '463787160210-89kiojjsupa9u2g2s946g7em5d8t6kdj.apps.googleusercontent.com';
+			//var apiKey = 'KzeIoIGf-kY0qKMqAOKZOenP';
+			var scopes = [
+  		'https://www.googleapis.com/auth/youtube'
+			];
+			function handleClientLoad() {
+			  gapi.auth.init(function() {
+			  	window.setTimeout(checkAuth,1);
+			  });
+			}
+
+			function checkAuth() {
+			  gapi.auth.authorize({
+			  	client_id: clientId, 
+			  	scope: scopes, 
+			  	immediate: true
+			  }, handleAuthResult);
+			}
+
+			function handleAuthResult(authResult) {
+			  if (authResult && !authResult.error) {
+			    loadAPIClientInterfaces();
+			  } else {
+			    handleAuthClick;
+			  }
+			}
+
+			function handleAuthClick(event) {
+			  gapi.auth.authorize({client_id: clientId, scope: scopes, immediate: false}, handleAuthResult);
+			  return false;
+			}
+
+			function loadAPIClientInterfaces() {
+				gapi.client.load('youtube', 'v3', function() {
+					console.log('youtube loaded');
+					//handleAPILoaded();
+				})
+			}
+
+			
+		</script>
 		<div id="main"></div>
+		<script src="https://apis.google.com/js/client.js?onload=handleClientLoad"></script>
 		<script src="build/main.js"></script>
 	</body>
 </html>
