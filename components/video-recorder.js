@@ -1,4 +1,5 @@
 import React from 'react';
+import RecordRTC from 'recordrtc';
 
 var VideoRecorder = React.createClass({
 	componentDidMount: function() {
@@ -52,8 +53,9 @@ var VideoRecorder = React.createClass({
 						<div className='record-click-me' >Click me!</div>
 					</div>
 				</div>					
-				<div ref='video' id='video-container'>
+				<div ref='video' id='video-container' muted>
 					<video id='camera-stream' width='500' autoPlay ></video>
+					<button onClick={this.recordVideo} className='button-record'>Record</button>
 					<div>
 			      <label className='labels-upload' htmlFor="title-upload">Title:</label>
 			      <input id="title-upload" type="text" defaultValue=''/>
@@ -74,6 +76,10 @@ var VideoRecorder = React.createClass({
 			</div>
 			
 		)
+	},
+
+	recordVideo: function() {
+		console.log('Video recording started!')
 	},
 
 	captureVideoAudio: function() {
@@ -105,7 +111,9 @@ var VideoRecorder = React.createClass({
 		      // Log the error to the console.
 		      console.log('The following error occurred when trying to use getUserMedia: ' + err);
 		    }
-		  );
+		  )
+		  .then(successCallback)
+		  .catch(errorCallback);
 
 		} else {
 		  alert('Sorry, your browser does not support getUserMedia');
