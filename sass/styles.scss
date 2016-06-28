@@ -124,8 +124,20 @@ i.fa.fa-arrow-up {
 	background-color: red;
 	height: 100px;
 	width: 100px;
+	transform: translate(-240px, 270px);
+}
+.button-stop {
+	@extend .button-record;
+	color: white;
+	background-color: black;
 	transform: translate(-100px, 270px);
 }
+#button-download {
+	background-color: black;
+}
+
+
+
 .labels-upload {
 	font-family: Helvetica, Arial;
 	font-size: 12pt;
