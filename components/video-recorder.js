@@ -7,37 +7,57 @@ var recordRTC;
 var urlVideo;
 
 
+
 var VideoRecorder = React.createClass({
-	componentDidMount: function() {
-
-	},
-
-	authorizeApp: function() {
-		var clientId = '463787160210-89kiojjsupa9u2g2s946g7em5d8t6kdj.apps.googleusercontent.com';
-		var apiKey = 'KzeIoIGf-kY0qKMqAOKZOenP';
-		var scopes = [
-		'https://www.googleapis.com/auth/youtube'
-		];
-		function handleClientLoad() {
-		  gapi.client.setApiKey(apiKey);
-		  window.setTimeout(checkAuth,1);
+	componentDidMount: function() {
+		if(gapi.auth) {
+			console.log('in componentDidMount');
+			this.authorizeApp();
+		} else {
+			console.log('calling checkGAPI from componentDidMount');
+			this.checkGAPI();
 		}
+	},
+	checkGAPI: function() {
+		if(gapi.auth) {
+			console.log('try in checkGAPI');
+			this.authorizeApp();
+		} else {
+			console.log('using timeout');
+			setTimeout(this.checkGAPI, 100);
+		}
+	},
+	authorizeApp: function() {
+		var clientId = this.props.clientId;
+		var scopes = this.props.scopes;
+		var result;
+		var accessToken;
+
+	  gapi.auth.init(function() {
+	  	window.setTimeout(checkAuth,1);
+	  });
 
 		function checkAuth() {
-		  gapi.auth.authorize({client_id: clientId, scope: scopes, immediate: true}, handleAuthResult);
+		  gapi.auth.authorize({
+		  	client_id: clientId, 
+		  	scope: scopes, 
+		  	immediate: true
+		  }, handleAuthResult);
 		}
 
 		function handleAuthResult(authResult) {
 		  if (authResult && !authResult.error) {
-		    console.log('Connected to gapi!!');
-		  } else {
-		    handleAuthClick;
+		    loadAPIClientInterfaces(authResult);			    
 		  }
 		}
 
-		function handleAuthClick(event) {
-		  gapi.auth.authorize({client_id: clientId, scope: scopes, immediate: false}, handleAuthResult);
-		  return false;
+		function loadAPIClientInterfaces(authResult) {
+			result = authResult;
+			accessToken = authResult.access_token;
+			console.log(accessToken);
+			gapi.client.load('youtube', 'v3', function() {
+			console.log('youtube api loaded');
+			})
 		}
 	},
 
@@ -63,7 +83,9 @@ var VideoRecorder = React.createClass({
 					<video id='camera-stream' width='500' autoPlay muted></video>
 					<button ref='button-record'onClick={this.recordVideo} className='button-record'>Record</button>
 					<button ref='button-stop' onClick={this.stopRecording} className='button-stop' >Stop</button>
-					<div ref= 'button-download' id='button-download'></div>
+					<button ref= 'button-download' id='button-download'></button>
+					<button onClick={this.handleUploadClick} id='button-upload'>Upload Video</button>
+					<div ></div>
 					<div>
 			      <label className='labels-upload' htmlFor="title-upload">Title:</label>
 			      <input id="title-upload" type="text" defaultValue=''/>
@@ -139,7 +161,7 @@ var VideoRecorder = React.createClass({
 					var url = video.src;
 					video.muted = false;
 					video.play();
-					downloadURL.innerHTML = '<a href="' + url + '" download="video.webm" target="_blank">Save Video</a><hr>';
+					downloadURL.innerHTML = '<a class="download-link" href="' + url + '" download="video.webm" target="_blank">Save Video</a><hr>';
 
 				});
 	    },
@@ -186,6 +208,186 @@ var VideoRecorder = React.createClass({
 		} else {
 		  alert('Sorry, your browser does not support getUserMedia');
 		}		
+	},
+
+/*
+	uploadToYT: function() {
+		var video = document.getElementById('camera-stream');
+		var file = video.src;
+
+		var UploadVideo = function() {
+			this.tags = ['youtube-cors-upload'];
+			this.categoryId = 22;
+			this.videoId = '';
+			this.uploadStartTime = 0;
+		}
+
+		UploadVideo.prototype.ready = function(accessToken) {
+		  this.accessToken = accessToken;
+		  this.gapi = gapi;
+		  this.authenticated = true;
+		  this.gapi.client.request({
+		    path: '/youtube/v3/channels',
+		    params: {
+		      part: 'snippet',
+		      mine: true
+		    },
+		    callback: function(response) {
+		      if (response.error) {
+		        console.log(response.error.message);
+		      } else {
+		        console.log('ready success');
+		      }
+		    }.bind(this)
+		  });
+		  $('#button').on("click", this.handleUploadClicked.bind(this));
+		};
+
+		UploadVideo.prototype.uploadFile = function(file) {
+			console.log('in uploadFile');
+			var metadata = {
+				snippet: {
+					title: 'test',
+					description: 'test',
+					tags: ['test'],
+					categoryId: 22
+				},
+				status: {
+					privacyStatus: 'public'
+				}
+			};
+			var uploader = new MediaUploader({
+				baseUrl: 'https://www.googleapis.com/upload/youtube/v3/videos',
+				file: file,
+				token: this.accessToken,
+				metadata: metadata,
+				params: {
+					part: Object.keys(metadata).join(',')
+				},
+				onError: function(data) {
+					var message = data;
+					try {
+						var errorResponse = JSON.parse(data);
+						message = errorResponse.error.message;
+					} finally {
+						alert(message);
+					}
+				}.bind(this),
+				onProgress: function(data) {
+					console.log('onprogress');
+					var currentTime = Date.now();
+					var bytesUploaded = data.loaded;
+					var totalBytes = data.total;
+					// The times are in millis, so we need to divide by 1000 to get seconds.
+					var bytesPerSecond = bytesUploaded / ((currentTime - this.uploadStartTime) / 1000);
+					var estimatedSecondsRemaining = (totalBytes - bytesUploaded) / bytesPerSecond;
+					var percentageComplete = (bytesUploaded * 100) / totalBytes;
+				}.bind(this),
+				onComplete: function(data) {
+					console.log('completed');
+					var uploadResponse = JSON.parse(data);
+					this.videoId = uploadResponse.id;
+					this.pollForVideoStatus();
+				}.bind(this)
+			});
+			this.uploadStartTime = Date.now();
+			uploader.upload();
+		}();
+
+		UploadVideo.prototype.handleUploadClicked = function() {
+			console.log('handleuploadclick');
+		  this.uploadFile($('#file').get(0).files[0]);
+		}();		
+	},
+*/
+
+	uploadToYT: function() {
+		var video = document.getElementById('camera-stream');
+		var file = video.src;
+
+		var UploadVideo = function() {
+			this.tags = ['youtube-cors-upload'];
+			this.categoryId = 22;
+			this.videoId = '';
+			this.uploadStartTime = 0;
+		}
+		
+		UploadVideo.ready = function(accessToken) {
+		  this.accessToken = accessToken;
+		  this.gapi = gapi;
+		  this.authenticated = true;
+		  this.gapi.client.request({
+		    path: '/youtube/v3/channels',
+		    params: {
+		      part: 'snippet',
+		      mine: true
+		    },
+		    callback: function(response) {
+		      if (response.error) {
+		        console.log(response.error.message);
+		      } else {
+		        console.log('ready success');
+		      }
+		    }.bind(this)
+		  });
+		  handleUploadClicked();
+		};
+	}, 
+	uploadFile: function(file) {
+		console.log('in uploadFile');
+		var metadata = {
+			snippet: {
+				title: 'test',
+				description: 'test',
+				tags: ['test'],
+				categoryId: 22
+			},
+			status: {
+				privacyStatus: 'public'
+			}
+		};
+		var uploader = new MediaUploader({
+			baseUrl: 'https://www.googleapis.com/upload/youtube/v3/videos',
+			file: file,
+			token: this.accessToken,
+			metadata: metadata,
+			params: {
+				part: Object.keys(metadata).join(',')
+			},
+			onError: function(data) {
+				var message = data;
+				try {
+					var errorResponse = JSON.parse(data);
+					message = errorResponse.error.message;
+				} finally {
+					alert(message);
+				}
+			}.bind(this),
+			onProgress: function(data) {
+				console.log('onprogress');
+				var currentTime = Date.now();
+				var bytesUploaded = data.loaded;
+				var totalBytes = data.total;
+				// The times are in millis, so we need to divide by 1000 to get seconds.
+				var bytesPerSecond = bytesUploaded / ((currentTime - this.uploadStartTime) / 1000);
+				var estimatedSecondsRemaining = (totalBytes - bytesUploaded) / bytesPerSecond;
+				var percentageComplete = (bytesUploaded * 100) / totalBytes;
+			}.bind(this),
+			onComplete: function(data) {
+				console.log('completed');
+				var uploadResponse = JSON.parse(data);
+				this.videoId = uploadResponse.id;
+				this.pollForVideoStatus();
+			}.bind(this)
+		});
+		this.uploadStartTime = Date.now();
+		uploader.upload();
+	},
+
+	handleUploadClick: function() {
+		console.log('handleuploadclick');
+		var video = document.getElementById('camera-stream');
+	  this.uploadFile(video.src);
 	}
 });
 

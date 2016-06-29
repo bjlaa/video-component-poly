@@ -7,11 +7,24 @@ import ReactDOM from 'react-dom';
 import VideoRecorder from '../components/video-recorder';
 
 class App extends Component {
+	constructor(props) {
+		super(props);
+		this.state = {
+			result: '',
+			accessToken: '',
+			clientId: '463787160210-89kiojjsupa9u2g2s946g7em5d8t6kdj.apps.googleusercontent.com',
+			scopes: ['https://www.googleapis.com/auth/youtube'],	
+		}		
+	}
 	render() {
 		return(
 			<div className='app'>
 				<div className='title'>Test Video Component</div>
-				<VideoRecorder />
+				<VideoRecorder 
+				clientId={this.state.clientId} 
+				scopes={this.state.scopes}
+				accessToken={this.state.accessToken}
+				ref='testing' />
 			</div>
 		)
 	}
