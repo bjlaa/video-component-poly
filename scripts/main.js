@@ -16,6 +16,9 @@ class App extends Component {
 			scopes: ['https://www.googleapis.com/auth/youtube'],	
 		}		
 	}
+	loadToken(accessToken) {
+		this.setState({accessToken: accessToken});
+	}
 	render() {
 		return(
 			<div className='app'>
@@ -24,6 +27,7 @@ class App extends Component {
 				clientId={this.state.clientId} 
 				scopes={this.state.scopes}
 				accessToken={this.state.accessToken}
+				loadToken={this.loadToken.bind(this)}
 				ref='testing' />
 			</div>
 		)

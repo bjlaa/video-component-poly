@@ -31,6 +31,6 @@ function authorizeApp() {
 		console.log(accessToken);
 		gapi.client.load('youtube', 'v3', function() {
 		console.log('youtube api loaded');
-		})
+		});
 	}
 }
