@@ -7,15 +7,15 @@ var recordRTC;
 var urlVideo;
 var AT;
 var uploadVideo;
+var recordedBlob;
 
 
 
 var VideoRecorder = React.createClass({
 
 	UploadVideo: function() {
-		console.log('in uploadvideo constructor');
 		var video = document.getElementById('camera-stream');
-		var file = video.src;
+		var file = recordedBlob;
 		var accessToken = AT;
 
 		this.tags = ['youtube-cors-upload'];
@@ -48,8 +48,8 @@ var VideoRecorder = React.createClass({
 				snippet: {
 					title: 'test',
 					description: 'test',
-					tags: ['test'],
-					categoryId: 22
+					tags: this.tags,
+					categoryId: this.categoryId
 				},
 				status: {
 					privacyStatus: 'public'
@@ -87,7 +87,9 @@ var VideoRecorder = React.createClass({
 					console.log('completed');
 					var uploadResponse = JSON.parse(data);
 					this.videoId = uploadResponse.id;
+					/*
 					this.pollForVideoStatus();
+					*/
 				}.bind(this)
 			});
 			this.uploadStartTime = Date.now();
@@ -96,9 +98,8 @@ var VideoRecorder = React.createClass({
 		this.handleUploadClick = function() {
 			console.log('handleuploadclick');
 			var video = document.getElementById('camera-stream');
-		  this.uploadFile(video.src);
+		  this.uploadFile(recordedBlob);
 		}
-		console.log('new upload created!');
 	},
 
 	componentDidMount: function() {
@@ -151,11 +152,9 @@ var VideoRecorder = React.createClass({
 
 	},
 	createUploadClass: function() {
-		console.log('in createUploadClass');
 		if(this.props.accessToken != '') {
 			var UploadFunction = this.UploadVideo;
 			uploadVideo = new UploadFunction();
-			console.log(uploadVideo);
 			uploadVideo.ready(AT);		
 		} else {
 			setTimeout(this.createUploadClass, 100)
@@ -163,11 +162,9 @@ var VideoRecorder = React.createClass({
 
 	},
 	handleClick: function() {
-		console.log(uploadVideo);
 		if(uploadVideo) {
 			console.log(uploadVideo);
 			uploadVideo.handleUploadClick();
-			console.log('success');
 		} else {
 			setTimeout(this.handleClick, 100);
 		}
@@ -236,7 +233,9 @@ var VideoRecorder = React.createClass({
 					mimeType: 'video/webm',
 					audioBitsPerSecond: 128000,
 					videoBitsPerSecond: 128000,
-					bitsPerSecond: 128000
+					bitsPerSecond: 128000,
+					bufferSize: 16384,
+					sampleRate: 96000
 				};
 				recordRTC = RecordRTC(localMediaStream, options);
 				recordRTC.startRecording();
@@ -249,11 +248,6 @@ var VideoRecorder = React.createClass({
 	      console.log('The following error occurred when trying to use getUserMedia: ' + err);
 	    }
 	  );	
-	},
-
-	uploadToYT: function() {
-		var uploadVideo = new UploadVideo();
-		uploadVideo.ready(accessToken);
 	},
 
 	stopRecording: function() {
@@ -271,14 +265,14 @@ var VideoRecorder = React.createClass({
 				recordRTC.stopRecording(function(audioVideoWebMURL) {
 					video.src = audioVideoWebMURL;
 
-					var recordedBlob = recordRTC.getBlob();
-					recordRTC.getDataURL(function(dataURL) { });
-					
-					var downloadURL = document.getElementById('button-download');
+					recordedBlob = recordRTC.getBlob();
+					recordedBlob.lastModifiedDate = new Date();
+					recordedBlob.name = 'VideoTest.webm';					
+					/*
 					var url = video.src;
 					video.muted = false;
 					video.play();
-					downloadURL.innerHTML = '<a class="download-link" href="' + url + '" download="video.webm" target="_blank">Save Video</a><hr>';
+					*/
 
 				});
 	    },
@@ -326,7 +320,11 @@ var VideoRecorder = React.createClass({
 		  alert('Sorry, your browser does not support getUserMedia');
 		}		
 	},
-
+	blobToFile: function(blob, fileName) {
+		blob.lastModifiedDate = new Date();
+		blob.name = fileName;
+		return blob;
+	}
 
 });
 
