@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { Component } from 'react';
 import RecordRTC from 'recordrtc';
 
 // Constraints for our video capture/recording
@@ -11,12 +11,39 @@ var recordedBlob;
 
 
 
-var VideoRecorder = React.createClass({
+class VideoRecorder extends Component {
+	constructor(props) {
+		super(props);
 
-	UploadVideo: function() {
+
+		// Our method bindings
+		this.checkGAPI = this.checkGAPI.bind(this);
+		this.checkAuth = this.checkAuth.bind(this);
+		this.handleAuthResult = this.handleAuthResult.bind(this);
+		this.loadAPIClientInterfaces = this.loadAPIClientInterfaces.bind(this);
+		this.createUploadClass = this.createUploadClass.bind(this);
+		this.UploadVideo = this.UploadVideo.bind(this);
+	}
+
+	componentDidMount() {
+		if(gapi.auth) {
+			this.authorizeApp();
+		} else {
+			this.checkGAPI();
+		}
+	}
+
+	// constructor function: creates an UploadVideo element
+	UploadVideo() {
+		var self = this;
+		console.log(self);
+		console.log(this);
 		var video = document.getElementById('camera-stream');
 		var file = recordedBlob;
 		var accessToken = AT;
+		var titleVideo = this.refs.titleVideo.value;
+		var descVideo = this.refs.descVideo.value;
+		var privacyVideo = this.refs.privacyVideo.value;
 
 		this.tags = ['youtube-cors-upload'];
 		this.categoryId = 22;
@@ -46,13 +73,13 @@ var VideoRecorder = React.createClass({
 		this.uploadFile = function(file) {
 			var metadata = {
 				snippet: {
-					title: 'test',
-					description: 'test',
+					title: titleVideo,
+					description: descVideo,
 					tags: this.tags,
 					categoryId: this.categoryId
 				},
 				status: {
-					privacyStatus: 'public'
+					privacyStatus: privacyVideo
 				}
 			};
 			var uploader = new MediaUploader({
@@ -100,24 +127,17 @@ var VideoRecorder = React.createClass({
 			var video = document.getElementById('camera-stream');
 		  this.uploadFile(recordedBlob);
 		}
-	},
+	}
 
-	componentDidMount: function() {
-		if(gapi.auth) {
-			this.authorizeApp();
-		} else {
-			this.checkGAPI();
-		}
-	},
-	checkGAPI: function() {
+	checkGAPI() {
 		if(gapi.auth) {
 			this.authorizeApp();
 		} else {
 			setTimeout(this.checkGAPI, 100);
 		}
-	},
+	}
 
-	authorizeApp: function() {
+	authorizeApp() {
 		var clientId = this.props.clientId;
 		var scopes = this.props.scopes;
 		var result;
@@ -126,20 +146,20 @@ var VideoRecorder = React.createClass({
 	  gapi.auth.init(function() {
 	  	window.setTimeout(checkAuth(clientId, scopes),1);
 	  });
-	},
-	checkAuth: function(clientId, scopes) {
+	}
+	checkAuth(clientId, scopes) {
 	  gapi.auth.authorize({
 	  	client_id: clientId, 
 	  	scope: scopes, 
 	  	immediate: true
 	  }, this.handleAuthResult);
-	},
-	handleAuthResult: function(authResult) {
+	}
+	handleAuthResult(authResult) {
 	  if (authResult && !authResult.error) {
 	    this.loadAPIClientInterfaces(authResult);			    
 	  }
-	},
-	loadAPIClientInterfaces: function(authResult) {
+	}
+	loadAPIClientInterfaces(authResult) {
 		// Stores our current token in state variable
 		var accessToken = authResult.access_token;
 		this.props.loadToken(accessToken);
@@ -149,9 +169,8 @@ var VideoRecorder = React.createClass({
 		console.log('youtube api loaded');
 		});
 		this.createUploadClass();
-
-	},
-	createUploadClass: function() {
+	}
+	createUploadClass() {
 		if(this.props.accessToken != '') {
 			var UploadFunction = this.UploadVideo;
 			uploadVideo = new UploadFunction();
@@ -160,46 +179,42 @@ var VideoRecorder = React.createClass({
 			setTimeout(this.createUploadClass, 100)
 		}
 
-	},
-	handleClick: function() {
+	}
+	handleClick() {
 		if(uploadVideo) {
-			console.log(uploadVideo);
 			uploadVideo.handleUploadClick();
 		} else {
 			setTimeout(this.handleClick, 100);
 		}
-	},
+	}
 
-	render: function() {
+	render() {
 		var renderedComponent;
 		return(
 			<div>
 				<div ref='record' className='record'>
-					<div className='record-message'>Let's try recording a video:</div>
 					<div className='record-button-container'>
-						<i onClick={this.renderVideo} className="fa fa-video-camera" aria-hidden="true"></i>
-						<i className="fa fa-arrow-up" aria-hidden="true"></i>
-						<div className='record-click-me' >Click me!</div>
+						<i onClick={this.renderVideo.bind(this)} className="fa fa-video-camera" aria-hidden="true"></i>
 					</div>
 				</div>					
 				<div ref='video' id='video-container' >
-					<video id='camera-stream' width='500' autoPlay muted></video>
+					<video id='camera-stream' width='1281px' autoPlay muted></video>
 					<button ref='button-record'onClick={this.recordVideo} className='button-record'>Record</button>
 					<button ref='button-stop' onClick={this.stopRecording} className='button-stop' >Stop</button>
-					<button ref= 'button-download' id='button-download'></button>
 					<button onClick={this.handleClick} id='button-upload'>Upload Video</button>
+					<button onClick={this.cancelVideo} className='button-cancel' >Cancel</button>
 					<div ></div>
 					<div>
 			      <label className='labels-upload' htmlFor="title-upload">Title:</label>
-			      <input id="title-upload" type="text" defaultValue=''/>
+			      <input ref='titleVideo' id="title-upload" type="text" defaultValue=''/>
 			    </div>
 			    <div>
 			      <label className='labels-upload' htmlFor="description">Description:</label>
-			      <textarea defaultValue='' id="description"></textarea>
+			      <textarea ref='descVideo' defaultValue='' id="description"></textarea>
 			    </div>
 			    <div>
 			      <label className='labels-upload' htmlFor="privacy-status">Privacy Status:</label>
-			      <select id="privacy-status">
+			      <select ref='privacyVideo' id="privacy-status">
 			        <option>public</option>
 			        <option>unlisted</option>
 			        <option>private</option>
@@ -209,15 +224,18 @@ var VideoRecorder = React.createClass({
 			</div>
 			
 		)
-	},
+	}
 
-	renderVideo: function() {
+	renderVideo() {
 		this.refs.video.style.visibility = 'visible';
 		this.refs.record.style.display = 'none';
 		this.captureVideoAudio();
-	},
+	}
+	cancelVideo() {
 
-	recordVideo: function() {
+	}
+
+	recordVideo() {
 	  navigator.getUserMedia(
 	    // Constraints
 	    mediaConstraints,
@@ -248,9 +266,9 @@ var VideoRecorder = React.createClass({
 	      console.log('The following error occurred when trying to use getUserMedia: ' + err);
 	    }
 	  );	
-	},
+	}
 
-	stopRecording: function() {
+	stopRecording() {
 	  navigator.getUserMedia(
 	    // Constraints
 	    mediaConstraints,
@@ -283,9 +301,9 @@ var VideoRecorder = React.createClass({
 	      console.log('The following error occurred when trying to use getUserMedia: ' + err);
 	    }
 	  );
-	},
+	}
 
-	captureVideoAudio: function() {
+	captureVideoAudio() {
 	  navigator.getUserMedia = (navigator.getUserMedia ||
 	                            navigator.webkitGetUserMedia ||
 	                            navigator.mozGetUserMedia || 
@@ -319,13 +337,7 @@ var VideoRecorder = React.createClass({
 		} else {
 		  alert('Sorry, your browser does not support getUserMedia');
 		}		
-	},
-	blobToFile: function(blob, fileName) {
-		blob.lastModifiedDate = new Date();
-		blob.name = fileName;
-		return blob;
 	}
-
-});
+};
 
 export default VideoRecorder;

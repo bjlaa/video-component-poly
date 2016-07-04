@@ -59,6 +59,7 @@ a {
 */
 .record {
 	width: 100%;
+	color: black;
 }
 .record-message {
 	font-family: Helvetica, Arial;
@@ -83,7 +84,7 @@ i.fa.fa-video-camera {
 	padding: 10px;
 	border: solid gray 1pt;
 	border-radius: 10px;
-	color: #AD0000;
+	color: gray;
 }
 i.fa.fa-video-camera:hover {
 	cursor: pointer;
@@ -124,10 +125,12 @@ i.fa.fa-arrow-up {
 	background-color: red;
 	height: 100px;
 	width: 100px;
+	border-radius: 100%;
 	transform: translate(-240px, 270px);
 }
 .button-stop {
 	@extend .button-record;
+	border-radius: 0%;
 	color: white;
 	background-color: black;
 	transform: translate(-100px, 270px);
@@ -137,7 +140,15 @@ i.fa.fa-arrow-up {
 	color: black;
 }
 
-
+#button-upload {
+	border-color: green;
+	color: white;
+	background-color: green;
+	width: 100px;
+	margin-left:auto;
+	margin-right: auto;
+	display: none;
+}
 
 .labels-upload {
 	font-family: Helvetica, Arial;

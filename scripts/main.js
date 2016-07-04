@@ -22,7 +22,6 @@ class App extends Component {
 	render() {
 		return(
 			<div className='app'>
-				<div className='title'>Test Video Component</div>
 				<VideoRecorder 
 				clientId={this.state.clientId} 
 				scopes={this.state.scopes}
