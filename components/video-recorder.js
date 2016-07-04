@@ -15,6 +15,12 @@ class VideoRecorder extends Component {
 	constructor(props) {
 		super(props);
 
+		this.state = {
+			titleVideo: '',
+			descVideo: '',
+			privacyVideo: ''
+
+		};
 
 		// Our method bindings
 		this.checkGAPI = this.checkGAPI.bind(this);
@@ -23,6 +29,11 @@ class VideoRecorder extends Component {
 		this.loadAPIClientInterfaces = this.loadAPIClientInterfaces.bind(this);
 		this.createUploadClass = this.createUploadClass.bind(this);
 		this.UploadVideo = this.UploadVideo.bind(this);
+		this.handleClick = this.handleClick.bind(this);
+		this.renderVideo = this.renderVideo.bind(this);
+		this.recordVideo = this.recordVideo.bind(this);
+		this.stopRecording = this.stopRecording.bind(this);
+		this.handleOnChange = this.handleOnChange.bind(this);
 	}
 
 	componentDidMount() {
@@ -34,16 +45,10 @@ class VideoRecorder extends Component {
 	}
 
 	// constructor function: creates an UploadVideo element
-	UploadVideo() {
-		var self = this;
-		console.log(self);
-		console.log(this);
+	UploadVideo(self) {
 		var video = document.getElementById('camera-stream');
 		var file = recordedBlob;
 		var accessToken = AT;
-		var titleVideo = this.refs.titleVideo.value;
-		var descVideo = this.refs.descVideo.value;
-		var privacyVideo = this.refs.privacyVideo.value;
 
 		this.tags = ['youtube-cors-upload'];
 		this.categoryId = 22;
@@ -71,15 +76,16 @@ class VideoRecorder extends Component {
 		  });			
 		}
 		this.uploadFile = function(file) {
+			console.log(self.state.titleVideo);
 			var metadata = {
 				snippet: {
-					title: titleVideo,
-					description: descVideo,
+					title: self.state.titleVideo,
+					description: self.state.descVideo,
 					tags: this.tags,
 					categoryId: this.categoryId
 				},
 				status: {
-					privacyStatus: privacyVideo
+					privacyStatus: self.state.privacyVideo
 				}
 			};
 			var uploader = new MediaUploader({
@@ -114,9 +120,6 @@ class VideoRecorder extends Component {
 					console.log('completed');
 					var uploadResponse = JSON.parse(data);
 					this.videoId = uploadResponse.id;
-					/*
-					this.pollForVideoStatus();
-					*/
 				}.bind(this)
 			});
 			this.uploadStartTime = Date.now();
@@ -171,9 +174,14 @@ class VideoRecorder extends Component {
 		this.createUploadClass();
 	}
 	createUploadClass() {
+
+		//This variable avoids having binding issue 
+		// regarding 'this' in UploadVideo()
+		var self = this;
+
 		if(this.props.accessToken != '') {
 			var UploadFunction = this.UploadVideo;
-			uploadVideo = new UploadFunction();
+			uploadVideo = new UploadFunction(self);
 			uploadVideo.ready(AT);		
 		} else {
 			setTimeout(this.createUploadClass, 100)
@@ -187,6 +195,13 @@ class VideoRecorder extends Component {
 			setTimeout(this.handleClick, 100);
 		}
 	}
+	handleOnChange(event) {
+		this.setState({
+			titleVideo: this.refs.titleVideo.value,
+			descVideo: this.refs.descVideo.value,
+			privacyVideo: this.refs.privacyVideo.value
+		})
+	}
 
 	render() {
 		var renderedComponent;
@@ -198,23 +213,23 @@ class VideoRecorder extends Component {
 					</div>
 				</div>					
 				<div ref='video' id='video-container' >
-					<video id='camera-stream' width='1281px' autoPlay muted></video>
-					<button ref='button-record'onClick={this.recordVideo} className='button-record'>Record</button>
-					<button ref='button-stop' onClick={this.stopRecording} className='button-stop' >Stop</button>
-					<button onClick={this.handleClick} id='button-upload'>Upload Video</button>
+					<video ref='cameraStream'id='camera-stream' width='1281px' autoPlay muted></video>
+					<button ref='buttonRecord'onClick={this.recordVideo} className='button-record'>Record</button>
+					<button ref='buttonStop' onClick={this.stopRecording} className='button-stop' >Stop</button>
+					<button ref='buttonUpload' onClick={this.handleClick} id='button-upload'>Upload Video</button>
 					<button onClick={this.cancelVideo} className='button-cancel' >Cancel</button>
 					<div ></div>
 					<div>
 			      <label className='labels-upload' htmlFor="title-upload">Title:</label>
-			      <input ref='titleVideo' id="title-upload" type="text" defaultValue=''/>
+			      <input onChange={this.handleOnChange} ref='titleVideo' id="titleVideo" type="text" defaultValue=''/>
 			    </div>
 			    <div>
 			      <label className='labels-upload' htmlFor="description">Description:</label>
-			      <textarea ref='descVideo' defaultValue='' id="description"></textarea>
+			      <textarea onChange={this.handleOnChange} ref='descVideo' id='descVideo' defaultValue=''></textarea>
 			    </div>
 			    <div>
 			      <label className='labels-upload' htmlFor="privacy-status">Privacy Status:</label>
-			      <select ref='privacyVideo' id="privacy-status">
+			      <select onChange={this.handleOnChange} ref='privacyVideo' id='privacyVideo'>
 			        <option>public</option>
 			        <option>unlisted</option>
 			        <option>private</option>
@@ -236,6 +251,9 @@ class VideoRecorder extends Component {
 	}
 
 	recordVideo() {
+		this.refs.buttonRecord.style.display= 'none';
+		this.refs.buttonStop.style.display= 'initial';
+		this.refs.cameraStream.style.outline = 'solid red 1px';
 	  navigator.getUserMedia(
 	    // Constraints
 	    mediaConstraints,
@@ -269,6 +287,12 @@ class VideoRecorder extends Component {
 	}
 
 	stopRecording() {
+		this.stopVideoCapture();
+		this.refs.buttonStop.style.display= 'none';
+		this.refs.buttonUpload.style.display = 'initial';
+		this.refs.cameraStream.style.outline = 'solid green 1px';
+		this.refs.cameraStream.controls = true;
+		this.refs.cameraStream.muted = false;
 	  navigator.getUserMedia(
 	    // Constraints
 	    mediaConstraints,
@@ -337,6 +361,27 @@ class VideoRecorder extends Component {
 		} else {
 		  alert('Sorry, your browser does not support getUserMedia');
 		}		
+	}
+
+	stopVideoCapture() {
+		console.log('getting called');
+		navigator.getUserMedia(
+	    mediaConstraints,
+
+	    // Success Callback
+	    function(localMediaStream) {
+	    	var track0 = localMediaStream.getTracks()[0];
+	    	var track1 = localMediaStream.getTracks()[1];
+	    	var tracks = localMediaStream.getTracks();
+	    	console.log(tracks);
+	    	track0.stop();
+	    	track1.stop();
+	    },
+	    function(err) {
+	      // Log the error to the console.
+	      console.log('The following error occurred when trying to use getUserMedia: ' + err);
+	    }
+		)
 	}
 };
 

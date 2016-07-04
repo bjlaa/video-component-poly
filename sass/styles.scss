@@ -57,22 +57,6 @@ a {
 /*
 	VideoRecorder component
 */
-.record {
-	width: 100%;
-	color: black;
-}
-.record-message {
-	font-family: Helvetica, Arial;
-	font-size: 18pt;	
-	width: 100%;
-	text-align: center;	
-	padding-top: 50px;
-}
-.record-button-container {
-	margin-top: 100px;
-	width: 100%;
-	text-align: center;
-}
 
 i.fa.fa-video-camera {
 	display: block;
@@ -92,22 +76,6 @@ i.fa.fa-video-camera:hover {
 	transition: background .5s ease-in-out;
 }
 
-i.fa.fa-arrow-up {
-	font-size:8pt;
-	display: block;
-	margin-right: auto;
-	margin-left: auto;	
-	width: 10px;
-	margin-top: 5px;
-}
-
-.record-click-me {
-	font-family: "Comic Sans MS", cursive, sans-serif;
-	font-size: 10pt;	
-	width: 100%;
-	text-align: center;
-}
-
 #video-container {
 	visibility: hidden;
   margin: 2em auto 0;
@@ -123,30 +91,30 @@ i.fa.fa-arrow-up {
 .button-record {
 	position: absolute;
 	background-color: red;
+	color: white;
 	height: 100px;
 	width: 100px;
 	border-radius: 100%;
-	transform: translate(-240px, 270px);
+	transform: translate(-130px, 230px);
+}
+.button-record:hover {
+	cursor: pointer;
 }
 .button-stop {
+	display: none;
 	@extend .button-record;
 	border-radius: 0%;
 	color: white;
 	background-color: black;
-	transform: translate(-100px, 270px);
-}
-#button-download {
-	background-color: green;
-	color: black;
 }
 
+
 #button-upload {
+	@extend .button-record;
 	border-color: green;
+	border-radius: 20%;
 	color: white;
 	background-color: green;
-	width: 100px;
-	margin-left:auto;
-	margin-right: auto;
 	display: none;
 }
 
