@@ -1,26 +1,10 @@
 import React, { Component } from 'react';
 import RecordRTC from 'recordrtc';
 
-// Constraints for our video capture/recording
-var mediaConstraints = { video: true, audio: true }; 
-var recordRTC;
-var urlVideo;
-var AT;
-var uploadVideo;
-var recordedBlob;
-
-
 
 class VideoRecorder extends Component {
 	constructor(props) {
 		super(props);
-
-		this.state = {
-			titleVideo: '',
-			descVideo: '',
-			privacyVideo: ''
-
-		};
 
 		// Our method bindings
 		this.checkGAPI = this.checkGAPI.bind(this);
@@ -28,7 +12,6 @@ class VideoRecorder extends Component {
 		this.handleAuthResult = this.handleAuthResult.bind(this);
 		this.loadAPIClientInterfaces = this.loadAPIClientInterfaces.bind(this);
 		this.createUploadClass = this.createUploadClass.bind(this);
-		this.UploadVideo = this.UploadVideo.bind(this);
 		this.handleClick = this.handleClick.bind(this);
 		this.renderVideo = this.renderVideo.bind(this);
 		this.recordVideo = this.recordVideo.bind(this);
@@ -37,6 +20,7 @@ class VideoRecorder extends Component {
 	}
 
 	componentDidMount() {
+		// This is where the authentication process starts
 		if(gapi.auth) {
 			this.authorizeApp();
 		} else {
@@ -44,11 +28,14 @@ class VideoRecorder extends Component {
 		}
 	}
 
-	// constructor function: creates an UploadVideo element
+
+
+	/* 
+		UploadVideo: Constructor method
+	*/
+
 	UploadVideo(self) {
 		var video = document.getElementById('camera-stream');
-		var file = recordedBlob;
-		var accessToken = AT;
 
 		this.tags = ['youtube-cors-upload'];
 		this.categoryId = 22;
@@ -76,22 +63,21 @@ class VideoRecorder extends Component {
 		  });			
 		}
 		this.uploadFile = function(file) {
-			console.log(self.state.titleVideo);
 			var metadata = {
 				snippet: {
-					title: self.state.titleVideo,
-					description: self.state.descVideo,
+					title: self.props.titleVideo,
+					description: self.props.descVideo,
 					tags: this.tags,
 					categoryId: this.categoryId
 				},
 				status: {
-					privacyStatus: self.state.privacyVideo
+					privacyStatus: self.props.privacyVideo
 				}
 			};
 			var uploader = new MediaUploader({
 				baseUrl: 'https://www.googleapis.com/upload/youtube/v3/videos',
 				file: file,
-				token: this.accessToken,
+				token: self.props.accessToken,
 				metadata: metadata,
 				params: {
 					part: Object.keys(metadata).join(',')
@@ -126,12 +112,20 @@ class VideoRecorder extends Component {
 			uploader.upload();
 		}
 		this.handleUploadClick = function() {
-			console.log('handleuploadclick');
 			var video = document.getElementById('camera-stream');
-		  this.uploadFile(recordedBlob);
+		  this.uploadFile(self.props.recordedBlob);
 		}
 	}
 
+
+
+
+	/*
+		Authentication with GoogleAPI
+	*/
+
+	// This function allow us to wait until gapi.auth is loaded
+	// before starting our authentication with authorizeApp
 	checkGAPI() {
 		if(gapi.auth) {
 			this.authorizeApp();
@@ -140,16 +134,20 @@ class VideoRecorder extends Component {
 		}
 	}
 
+	// This the first function called in our authentication process
+	// it initiates the authentication
 	authorizeApp() {
 		var clientId = this.props.clientId;
 		var scopes = this.props.scopes;
-		var result;
-		var accessToken;
 		var checkAuth = this.checkAuth;
 	  gapi.auth.init(function() {
 	  	window.setTimeout(checkAuth(clientId, scopes),1);
 	  });
 	}
+
+	// This checks with the API that our clientID and scopes are valid
+	// ====>> this is where the youtube user account is defined
+	// the clientID defines the account associated
 	checkAuth(clientId, scopes) {
 	  gapi.auth.authorize({
 	  	client_id: clientId, 
@@ -157,54 +155,265 @@ class VideoRecorder extends Component {
 	  	immediate: true
 	  }, this.handleAuthResult);
 	}
+
+	// This checks whether there is any error with our cliendID and
+	// scopes before pursuing
 	handleAuthResult(authResult) {
 	  if (authResult && !authResult.error) {
 	    this.loadAPIClientInterfaces(authResult);			    
+	  } else {
+	  	console.log(authResult.error);
 	  }
 	}
+
+	// This is the final step in our authentication:
+	// an access token is fetched and stored in our App state
+	// to be reused at the uploading stage
 	loadAPIClientInterfaces(authResult) {
 		// Stores our current token in state variable
 		var accessToken = authResult.access_token;
-		this.props.loadToken(accessToken);
-		AT = accessToken;
+		this.props.saveToken(accessToken);
 
 		gapi.client.load('youtube', 'v3', function() {
 		console.log('youtube api loaded');
 		});
+		// After authentication is complete, we set up the future
+		// upload
 		this.createUploadClass();
 	}
-	createUploadClass() {
 
+
+
+
+	/*
+		Setting up the Future upload
+	*/
+
+	// This checks whether the access token is fetched and stored
+	// in our App state and calls the UploadVideo constructor
+	// passing it our access token. This sets up our app to be
+	// ready for uploading
+	createUploadClass() {
 		//This variable avoids having binding issue 
 		// regarding 'this' in UploadVideo()
 		var self = this;
 
 		if(this.props.accessToken != '') {
 			var UploadFunction = this.UploadVideo;
-			uploadVideo = new UploadFunction(self);
-			uploadVideo.ready(AT);		
+			var accessToken = this.props.accessToken;
+
+			// This created a new session of our UploadVideo
+			// and saves it to our App state 
+			var uploadVideo = new UploadFunction(self);
+			self.props.saveUploadVideoSession(uploadVideo);
+
+			self.props.uploadVideo.ready(accessToken);		
 		} else {
 			setTimeout(this.createUploadClass, 100)
 		}
+	}
+
+	/*
+		Starting the capture and rendering its stream to our video div
+	*/
+
+
+	// This is called when the user clicks on the camera icon
+	// starting the video capture by the device's camera/ microphone 
+	renderVideo() {
+		this.refs.video.style.visibility = 'visible';
+		this.refs.record.style.display = 'none';
+		this.captureVideoAudio();
+	}
+
+	// This method only turns on the device's camera and microphone
+	// and transmit their stream 'localMediaStream' to our video div
+	captureVideoAudio() {
+	  navigator.getUserMedia = (navigator.getUserMedia ||
+	                            navigator.webkitGetUserMedia ||
+	                            navigator.mozGetUserMedia || 
+	                            navigator.msGetUserMedia);
+	  var self = this;
+		if (navigator.getUserMedia) {
+		  // Request the camera.
+		  navigator.getUserMedia(
+		    // Constraints
+		    self.props.mediaConstraints,
+
+		    // Success Callback
+		    function(localMediaStream) {
+
+		    	//Rendering video on screen part
+
+					// Get a reference to the video element on the page.
+					var video = document.getElementById('camera-stream');
+
+					// Create an object URL for the video stream and use this 
+					// to set the video source.
+					video.src = window.URL.createObjectURL(localMediaStream);
+		    },
+
+		    // Error Callback
+		    function(err) {
+		      // Log the error to the console.
+		      console.log('The following error occurred when trying to use getUserMedia: ' + err);
+		    }
+		  );
+
+		} else {
+		  alert('Sorry, your browser does not support getUserMedia');
+		}		
+	}
+
+	// This method is called whenever the user clicks on the cancel
+	// button
+	cancelVideo() {
 
 	}
+
+
+	/*
+		Recording of our video
+	*/
+
+	// This method is called when the user clicks on the record 
+	// button: it gets the stream from 'localMediaStream' and 
+	// stores it in our App state with saveRecordRTC
+	recordVideo() {
+		this.refs.buttonRecord.style.display= 'none';
+		this.refs.buttonStop.style.display= 'initial';
+		this.refs.cameraStream.style.outline = 'solid red 1px';
+		var self = this;
+	  navigator.getUserMedia(
+	    // Constraints
+	    self.props.mediaConstraints,
+
+	    // Success Callback
+	    function(localMediaStream) {
+				//RecordRTC part - recording of the video
+
+				// Get a reference to the video element on the page.
+				var video = document.getElementById('camera-stream');
+
+				var options = {
+					mimeType: 'video/webm',
+					audioBitsPerSecond: 128000,
+					videoBitsPerSecond: 128000,
+					bitsPerSecond: 128000,
+					bufferSize: 16384,
+					sampleRate: 96000
+				};
+				var recordRTC = RecordRTC(localMediaStream, options);
+				self.props.saveRecordRTC(recordRTC);
+				self.props.recordRTC.startRecording();
+				console.log('Recording started!');
+	    },
+
+	    // Error Callback
+	    function(err) {
+	      // Log the error to the console.
+	      console.log('The following error occurred when trying to use getUserMedia: ' + err);
+	    }
+	  );	
+	}
+
+	//This method stops our recording and update our blob with a
+	// name and a date to convert it into a file that we can upload
+	// on Youtube:  
+	stopRecording() {
+		this.stopVideoCapture();
+		this.refs.buttonStop.style.display= 'none';
+		this.refs.buttonUpload.style.display = 'initial';
+		this.refs.cameraStream.style.outline = 'solid green 1px';
+		this.refs.cameraStream.controls = true;
+		this.refs.cameraStream.muted = false;
+
+		var self = this;
+	  navigator.getUserMedia(
+	    // Constraints
+	    self.props.mediaConstraints,
+
+	    // Success Callback
+	    function(localMediaStream) {
+
+				// Get a reference to the video element on the page.
+				var video = document.getElementById('camera-stream');
+
+				
+				var recordRTC = self.props.recordRTC;
+				recordRTC.stopRecording(function() {
+					var recordedBlob = self.props.recordedBlob;
+					
+
+					// the conversion is done here
+					recordedBlob = recordRTC.getBlob();
+					recordedBlob.lastModifiedDate = new Date();
+					recordedBlob.name = 'VideoTest.webm';
+
+					//and then we push the newly created file back into 
+					//our App state
+					self.props.updateRecordedBlob(recordedBlob);				
+
+				});
+	    },
+
+	    // Error Callback
+	    function(err) {
+	      // Log the error to the console.
+	      console.log('The following error occurred when trying to use getUserMedia: ' + err);
+	    }
+	  );
+	}
+
+
+	// This method allows us to turn off the device's camera and 
+	// microphone
+	stopVideoCapture() {
+		console.log('getting called');
+		var self = this;
+		navigator.getUserMedia(
+	    self.props.mediaConstraints,
+
+	    // Success Callback
+	    function(localMediaStream) {
+	    	var track0 = localMediaStream.getTracks()[0];
+	    	var track1 = localMediaStream.getTracks()[1];
+	    	var tracks = localMediaStream.getTracks();
+	    	console.log(tracks);
+	    	track0.stop();
+	    	track1.stop();
+	    },
+	    function(err) {
+	      // Log the error to the console.
+	      console.log('The following error occurred when trying to use getUserMedia: ' + err);
+	    }
+		)
+	}
+
+	/*
+		Helper functions, for handling events
+	*/
+
+	// This is called when the user clicks on the upload button
+	// after having recorded a video
 	handleClick() {
-		if(uploadVideo) {
-			uploadVideo.handleUploadClick();
+		if(this.props.uploadVideo != '') {
+			this.props.uploadVideo.handleUploadClick();
 		} else {
 			setTimeout(this.handleClick, 100);
 		}
 	}
+	// This allows us to save the video infos to our App state
+	// whenever the title, description or privacy status are
+	// modified
 	handleOnChange(event) {
-		this.setState({
-			titleVideo: this.refs.titleVideo.value,
-			descVideo: this.refs.descVideo.value,
-			privacyVideo: this.refs.privacyVideo.value
-		})
+		var title = this.refs.titleVideo.value;
+		var desc = this.refs.descVideo.value;
+		var privacy = this.refs.privacyVideo.value;
+		this.props.saveVideoInfos.bind(this, title, desc, privacy)();
 	}
 
 	render() {
-		var renderedComponent;
 		return(
 			<div>
 				<div ref='record' className='record'>
@@ -240,149 +449,10 @@ class VideoRecorder extends Component {
 			
 		)
 	}
-
-	renderVideo() {
-		this.refs.video.style.visibility = 'visible';
-		this.refs.record.style.display = 'none';
-		this.captureVideoAudio();
-	}
-	cancelVideo() {
-
-	}
-
-	recordVideo() {
-		this.refs.buttonRecord.style.display= 'none';
-		this.refs.buttonStop.style.display= 'initial';
-		this.refs.cameraStream.style.outline = 'solid red 1px';
-	  navigator.getUserMedia(
-	    // Constraints
-	    mediaConstraints,
-
-	    // Success Callback
-	    function(localMediaStream) {
-				//RecordRTC part - recording of the video
-
-				// Get a reference to the video element on the page.
-				var video = document.getElementById('camera-stream');
-
-				var options = {
-					mimeType: 'video/webm',
-					audioBitsPerSecond: 128000,
-					videoBitsPerSecond: 128000,
-					bitsPerSecond: 128000,
-					bufferSize: 16384,
-					sampleRate: 96000
-				};
-				recordRTC = RecordRTC(localMediaStream, options);
-				recordRTC.startRecording();
-				console.log('Recording started!');
-	    },
-
-	    // Error Callback
-	    function(err) {
-	      // Log the error to the console.
-	      console.log('The following error occurred when trying to use getUserMedia: ' + err);
-	    }
-	  );	
-	}
-
-	stopRecording() {
-		this.stopVideoCapture();
-		this.refs.buttonStop.style.display= 'none';
-		this.refs.buttonUpload.style.display = 'initial';
-		this.refs.cameraStream.style.outline = 'solid green 1px';
-		this.refs.cameraStream.controls = true;
-		this.refs.cameraStream.muted = false;
-	  navigator.getUserMedia(
-	    // Constraints
-	    mediaConstraints,
-
-	    // Success Callback
-	    function(localMediaStream) {
-
-				// Get a reference to the video element on the page.
-				var video = document.getElementById('camera-stream');
-
-				//RecordRTC part - recording of the video
-				recordRTC.stopRecording(function(audioVideoWebMURL) {
-					video.src = audioVideoWebMURL;
-
-					recordedBlob = recordRTC.getBlob();
-					recordedBlob.lastModifiedDate = new Date();
-					recordedBlob.name = 'VideoTest.webm';					
-					/*
-					var url = video.src;
-					video.muted = false;
-					video.play();
-					*/
-
-				});
-	    },
-
-	    // Error Callback
-	    function(err) {
-	      // Log the error to the console.
-	      console.log('The following error occurred when trying to use getUserMedia: ' + err);
-	    }
-	  );
-	}
-
-	captureVideoAudio() {
-	  navigator.getUserMedia = (navigator.getUserMedia ||
-	                            navigator.webkitGetUserMedia ||
-	                            navigator.mozGetUserMedia || 
-	                            navigator.msGetUserMedia);
-		if (navigator.getUserMedia) {
-		  // Request the camera.
-		  navigator.getUserMedia(
-		    // Constraints
-		    mediaConstraints,
-
-		    // Success Callback
-		    function(localMediaStream) {
-
-		    	//Rendering video on screen part
-
-					// Get a reference to the video element on the page.
-					var video = document.getElementById('camera-stream');
-
-					// Create an object URL for the video stream and use this 
-					// to set the video source.
-					video.src = window.URL.createObjectURL(localMediaStream);
-		    },
-
-		    // Error Callback
-		    function(err) {
-		      // Log the error to the console.
-		      console.log('The following error occurred when trying to use getUserMedia: ' + err);
-		    }
-		  );
-
-		} else {
-		  alert('Sorry, your browser does not support getUserMedia');
-		}		
-	}
-
-	stopVideoCapture() {
-		console.log('getting called');
-		navigator.getUserMedia(
-	    mediaConstraints,
-
-	    // Success Callback
-	    function(localMediaStream) {
-	    	var track0 = localMediaStream.getTracks()[0];
-	    	var track1 = localMediaStream.getTracks()[1];
-	    	var tracks = localMediaStream.getTracks();
-	    	console.log(tracks);
-	    	track0.stop();
-	    	track1.stop();
-	    },
-	    function(err) {
-	      // Log the error to the console.
-	      console.log('The following error occurred when trying to use getUserMedia: ' + err);
-	    }
-		)
-	}
 };
+
+
+
+
 
 export default VideoRecorder;
