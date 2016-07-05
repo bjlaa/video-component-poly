@@ -162,6 +162,7 @@ class VideoRecorder extends Component {
 	  if (authResult && !authResult.error) {
 	    this.loadAPIClientInterfaces(authResult);			    
 	  } else {
+	  	setTimeout(this.handleAuthResult, 100);
 	  	console.log(authResult.error);
 	  }
 	}
@@ -229,6 +230,7 @@ class VideoRecorder extends Component {
 	// This method only turns on the device's camera and microphone
 	// and transmit their stream 'localMediaStream' to our video div
 	captureVideoAudio() {
+		this.refs.cameraStream.muted = true;
 	  navigator.getUserMedia = (navigator.getUserMedia ||
 	                            navigator.webkitGetUserMedia ||
 	                            navigator.mozGetUserMedia || 
@@ -326,8 +328,12 @@ class VideoRecorder extends Component {
 		this.refs.buttonStop.style.display= 'none';
 		this.refs.buttonUpload.style.display = 'initial';
 		this.refs.cameraStream.style.outline = 'solid green 1px';
-		this.refs.cameraStream.controls = true;
 		this.refs.cameraStream.muted = false;
+		this.refs.cameraStream.autoPlay = 'disabled';
+		this.refs.cameraStream.controls = true;
+		var video = document.getElementById('camera-stream');
+		video.muted = false;
+		
 
 		var self = this;
 	  navigator.getUserMedia(
@@ -342,8 +348,15 @@ class VideoRecorder extends Component {
 
 				
 				var recordRTC = self.props.recordRTC;
-				recordRTC.stopRecording(function() {
+				recordRTC.stopRecording(function(audioVideoWebURL) {
 					var recordedBlob = self.props.recordedBlob;
+
+					// Get a reference to the video element on the page.
+					var video = document.getElementById('camera-stream');
+
+					// Create an object URL for the video stream and use this 
+					// to set the video source.
+					video.src = audioVideoWebURL;					
 					
 
 					// the conversion is done here
@@ -424,7 +437,7 @@ class VideoRecorder extends Component {
 					</div>
 				</div>					
 				<div ref='video' id='video-container' >
-					<video ref='cameraStream'id='camera-stream' width='1281px' autoPlay muted></video>
+					<video ref='cameraStream' id='camera-stream' width='1281px' autoPlay ></video>
 					<button ref='buttonRecord'onClick={this.recordVideo} className='button-record'>Record</button>
 					<button ref='buttonStop' onClick={this.stopRecording} className='button-stop' >Stop</button>
 					<button ref='buttonUpload' onClick={this.handleClick} id='button-upload'>Upload Video</button>
