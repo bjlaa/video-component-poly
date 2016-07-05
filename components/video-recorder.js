@@ -152,7 +152,7 @@ class VideoRecorder extends Component {
 	  gapi.auth.authorize({
 	  	client_id: clientId, 
 	  	scope: scopes, 
-	  	immediate: false
+	  	immediate: true
 	  }, this.handleAuthResult);
 	}
 

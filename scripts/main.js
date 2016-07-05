@@ -17,7 +17,11 @@ class App extends Component {
 			// clientID
 			clientId: '463787160210-89kiojjsupa9u2g2s946g7em5d8t6kdj.apps.googleusercontent.com',
 			// <<==
-			scopes: ['https://www.googleapis.com/auth/youtube', 'https://www.googleapis.com/auth/plus.login', 'https://www.googleapis.com/auth/userinfo.email'],	
+			scopes: [
+				'https://www.googleapis.com/auth/youtube', 
+				'https://www.googleapis.com/auth/plus.login', 
+				'https://www.googleapis.com/auth/userinfo.email'
+			],	
 			mediaConstraints: { video: true, audio: true },
 			titleVideo: '',
 			descVideo: '',
