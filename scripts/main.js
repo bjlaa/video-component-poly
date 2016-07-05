@@ -11,7 +11,12 @@ class App extends Component {
 		super(props);
 		this.state = {
 			accessToken: '',
+			// ==>> This is what the user will have to change in order
+			// to upload his video to his own channel:
+			// go to console.developer.google.com and create an OAuth
+			// clientID
 			clientId: '463787160210-89kiojjsupa9u2g2s946g7em5d8t6kdj.apps.googleusercontent.com',
+			// <<==
 			scopes: ['https://www.googleapis.com/auth/youtube'],	
 			mediaConstraints: { video: true, audio: true },
 			titleVideo: '',
@@ -22,6 +27,8 @@ class App extends Component {
 			uploadVideo: ''
 		}		
 	}
+
+
 	saveToken(accessToken) {
 		this.setState({accessToken: accessToken});
 	}
@@ -41,6 +48,7 @@ class App extends Component {
 	updateRecordedBlob(updatedBlob) {
 		this.setState({recordedBlob: updatedBlob});
 	}
+	
 	render() {
 		return(
 			<div className='app'>

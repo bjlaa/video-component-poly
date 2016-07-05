@@ -265,6 +265,7 @@ class VideoRecorder extends Component {
 		}		
 	}
 
+	// =======>>>>TODO: 
 	// This method is called whenever the user clicks on the cancel
 	// button
 	cancelVideo() {
@@ -366,7 +367,8 @@ class VideoRecorder extends Component {
 	}
 
 
-	// This method allows us to turn off the device's camera and 
+	// =======>>>>>TODO:
+	//This method allows us to turn off the device's camera and 
 	// microphone
 	stopVideoCapture() {
 		console.log('getting called');

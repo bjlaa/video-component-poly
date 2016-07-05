@@ -16,3 +16,6 @@ Download/clone the repo, then in your command line move to the repository and ty
 ```
 
 A page should open in your browser. If not visit: localhost:3000.
+
+In order to upload videos to your channel don't forget to go into
+./scripts/main.js and add your own OAuth ClientID to the state
