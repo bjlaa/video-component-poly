@@ -106,6 +106,7 @@ class VideoRecorder extends Component {
 					console.log('completed');
 					var uploadResponse = JSON.parse(data);
 					this.videoId = uploadResponse.id;
+					self.cleanAfterUpload();
 				}.bind(this)
 			});
 			this.uploadStartTime = Date.now();
@@ -403,6 +404,9 @@ class VideoRecorder extends Component {
 	    }
 		)
 	}
+	cleanAfterUpload() {
+		this.refs.buttonUpload.style.display = 'none';
+	}
 
 	/*
 		Helper functions, for handling events
@@ -437,10 +441,10 @@ class VideoRecorder extends Component {
 				</div>					
 				<div ref='video' id='video-container' >
 					<video ref='cameraStream' id='camera-stream' width='1281px' autoPlay ></video>
+					<div onClick={this.cancelVideo} ref='' className='button-cancel'>x</div>
 					<button ref='buttonRecord'onClick={this.recordVideo} className='button-record'>Record</button>
 					<button ref='buttonStop' onClick={this.stopRecording} className='button-stop' >Stop</button>
 					<button ref='buttonUpload' onClick={this.handleClick} id='button-upload'>Upload Video</button>
-					<button onClick={this.cancelVideo} className='button-cancel' >Cancel</button>
 					<div ></div>
 					<div>
 			      <label className='labels-upload' htmlFor="title-upload">Title:</label>

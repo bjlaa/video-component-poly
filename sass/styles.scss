@@ -107,6 +107,18 @@ i.fa.fa-video-camera:hover {
 	color: white;
 	background-color: black;
 }
+.button-cancel {
+	position: absolute;
+	color: white;
+	font-size: 40pt;
+	font-family: Arial;
+	transform: translate(20px,-380px);
+}
+.button-cancel:hover {
+	cursor: pointer;
+	color: lightgray;
+	transition: color 0.2s;
+}
 
 
 #button-upload {
