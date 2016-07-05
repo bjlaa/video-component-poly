@@ -159,10 +159,11 @@ class VideoRecorder extends Component {
 	// This checks whether there is any error with our cliendID and
 	// scopes before pursuing
 	handleAuthResult(authResult) {
+		console.log(authResult);
 	  if (authResult && !authResult.error) {
 	    this.loadAPIClientInterfaces(authResult);			    
 	  } else {
-	  	setTimeout(this.handleAuthResult, 100);
+	  	setTimeout(this.handleAuthResult, 500);
 	  	console.log(authResult.error);
 	  }
 	}
